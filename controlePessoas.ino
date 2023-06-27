@@ -49,11 +49,7 @@ void setup(void) {
   Serial.begin(115200);
   Serial2.begin(57600);
 
-
   setupLCD();
-  //conectaWiFi();
-  //setupNTP();
-
 
   xTaskCreatePinnedToCore(taskVeficacao, "taskVerificacao", 10000, NULL, 2, NULL, 0);
 
@@ -85,8 +81,8 @@ void loop(void) {
 
 void conectaWiFi(void){
   Serial.println("Conectando");
-  const char* ssid = "xxxxxxx";
-  const char* senha = "xxxxxxxx";
+  const char* ssid = "xxxxxxxx";
+  const char* senha = "xxxxxxxxxxx";
   WiFi.begin(ssid, senha);
 
   while(WiFi.status() != WL_CONNECTED){
@@ -151,9 +147,21 @@ void setupLCD(void){
   B00000,
 };
 
+byte cdilha []{
+  B01110,
+  B10000,
+  B10000,
+  B10001,
+  B01110,
+  B00100,
+  B00010,
+  B00100,
+};
+
   lcd.init();
   lcd.setBacklight(HIGH);
   lcd.createChar(0, digito);
+  lcd.createChar(1, cdilha);
   lcd.setCursor(5, 0);
   lcd.print("Carregando");
   lcd.setCursor(0, 1);
@@ -224,14 +232,51 @@ void biometriaSetup(){
 
 
 void dataLCD(void){
+
   Date date = getDate();
 
-  lcd.setCursor(0, 0);
+  lcd.setCursor(7, 0);
   lcd.print(diaSemana[date.dSemana]);
+  if(diaSemana[date.dSemana] == "Segunda"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);
+  }
+  if(diaSemana[date.dSemana] == "Terca"){
+    lcd.setCursor(7, 0);
+    lcd.print("Ter");
+    lcd.write(byte(1));
+    lcd.print("a");
+    lcd.print("  ");
+  }
+  if(diaSemana[date.dSemana] == "Quarta"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);
+    lcd.print("  ");
+  }
+  if(diaSemana[date.dSemana] == "Quinta"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);
+    lcd.print("  ");
+  }
+  if(diaSemana[date.dSemana] == "Sexta"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);
+    lcd.print("  ");
+  }
+  if(diaSemana[date.dSemana] == "Sabado"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);
+    lcd.print("  ");
+  }
+  if(diaSemana[date.dSemana] == "Domingo"){
+    lcd.setCursor(7, 0);
+    lcd.print(diaSemana[date.dSemana]);    
+  }
+  
   lcd.setCursor(0, 1);
-  lcd.printf("%02d/%02d/%d", date.dia, date.mes, date.ano);
+  lcd.printf("=====%02d/%02d/%d=====", date.dia, date.mes, date.ano);
   lcd.setCursor(0, 2);
-  lcd.printf("%02d:%02d:%02d", date.horas, date.minutos, date.segundos);
+  lcd.printf("======%02d:%02d:%02d======", date.horas, date.minutos, date.segundos);
 }
 
 
@@ -264,12 +309,12 @@ void conectaMQTT(void){
       lcd.setCursor(0, 3);
       lcd.print("                    ");
       lcd.setCursor(0, 2);
-      lcd.print("Conectado ao servidor");
+      lcd.print("Conectado ao server");
       lcd.setCursor(0, 3);
       lcd.print("MQTT");
       Serial.println("Conectado ao servidor MQTT!");
-      client.subscribe("nome");
-      client.subscribe("dados");
+      client.subscribe("nome_va_teste");
+      client.subscribe("dados_va_teste");
     } else {
       lcd.setCursor(0, 3);
       lcd.print("Erro na conexao");
@@ -287,13 +332,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
     messageTemp += (char)payload[i];
   }
 
-  if (strcmp(topic, "nome") == 0) {
-    Serial.print("Topico nome: ");
+  if (strcmp(topic, "nome_va_teste") == 0) {
+    Serial.print("Topico nome_va_teste: ");
     Serial.println(messageTemp);
     mensagemTopico1 = messageTemp;
   }
-  if (strcmp(topic, "dados") == 0) {
-    Serial.print("Topico dados: ");
+  if (strcmp(topic, "dados_va_teste") == 0) {
+    Serial.print("Topico dados_va_teste: ");
     Serial.println(messageTemp);
     mensagemTopico2 = messageTemp;
     cont = true;
@@ -324,7 +369,6 @@ int leituraBiometria() {
 
 
   Serial.print("Encontrado ID #"); Serial.println(finger.fingerID);
-
   String dadosDigitais = String(finger.fingerID);
   if(client.publish("dados_digital", dadosDigitais.c_str())) {
     Serial.print("Dado enviado: ");
