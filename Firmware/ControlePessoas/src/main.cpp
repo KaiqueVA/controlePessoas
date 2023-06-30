@@ -27,11 +27,6 @@ String mensagemTopico3;
 
 bool cont = false;
 
-const char *mqttServer = "mqtt.eclipseprojects.io";
-const int mqttPort = 1883;
-
-char *diaSemana[] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
-
 WiFiUDP ntpUDP;
 WiFiClient espClient;
 
@@ -48,12 +43,13 @@ void conectaWiFi(void);
 void setupNTP(void);
 void conectaMQTT(void);
 void dataLCD(void);
-void nomeLCD(String nome);
-void dadosLCD(String dados);
+void dadosLCD(String nome, String dados);
 void taskVeficacao(void *param);
 void callback(char *topic, byte *payload, unsigned int length);
 void biometriaSetup(void);
 int leituraBiometria(void);
+byte gravacaoDigital(void);
+byte leituraNumero(void);
 Date getDate(void);
 
 void setup(void)
@@ -75,8 +71,7 @@ void loop(void)
 
   if (cont == true)
   {
-    nomeLCD(mensagemTopico1);
-    dadosLCD(mensagemTopico2);
+    dadosLCD(mensagemTopico1, mensagemTopico2);
     delay(5000);
     lcd.clear();
     cont = false;
@@ -258,6 +253,8 @@ void biometriaSetup(void)
 void dataLCD(void)
 {
 
+  const char *diaSemana[] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
+
   Date date = getDate();
 
   lcd.setCursor(7, 0);
@@ -324,6 +321,8 @@ Date getDate(void)
 
 void conectaMQTT(void)
 {
+  const char *mqttServer = "mqtt.eclipseprojects.io";
+  const int mqttPort = 1883;
 
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
@@ -393,14 +392,10 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
 }
 
-void nomeLCD(String nome)
+void dadosLCD(String nome, String dados)
 {
   lcd.setCursor(0, 0);
   lcd.print(nome);
-}
-
-void dadosLCD(String dados)
-{
   lcd.setCursor(0, 1);
   lcd.print(dados);
 }
@@ -436,7 +431,7 @@ int leituraBiometria(void)
   return finger.fingerID;
 }
 
-byte leituraNumero()
+byte leituraNumero(void)
 {
   int n = 0;
 
@@ -449,7 +444,7 @@ byte leituraNumero()
   return n;
 }
 
-byte gravacaoDigital()
+byte gravacaoDigital(void)
 {
 
   byte id;
