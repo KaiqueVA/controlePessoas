@@ -26,6 +26,7 @@ String mensagemTopico2;
 String mensagemTopico3;
 
 bool cont = false;
+bool gravacao = false;
 
 WiFiUDP ntpUDP;
 WiFiClient espClient;
@@ -64,22 +65,30 @@ void setup(void)
 
 void loop(void)
 {
+
   if (WiFi.status() != WL_CONNECTED)
   {
     conectaWiFi();
   }
 
-  if (cont == true)
+  if (gravacao == true)
   {
-    dadosLCD(mensagemTopico1, mensagemTopico2);
-    delay(5000);
-    lcd.clear();
-    cont = false;
-    mensagemTopico1 = "";
-    mensagemTopico2 = "";
+    gravacaoDigital();
   }
+  else
+  {
+    if (cont == true)
+    {
+      dadosLCD(mensagemTopico1, mensagemTopico2);
+      delay(5000);
+      lcd.clear();
+      cont = false;
+      mensagemTopico1 = "";
+      mensagemTopico2 = "";
+    }
 
-  dataLCD();
+    dataLCD();
+  }
   client.loop();
   delay(1000);
 }
@@ -87,23 +96,31 @@ void loop(void)
 void conectaWiFi(void)
 {
   Serial.println("Conectando");
-  const char *ssid = "xxxxxxxxxx";
+  const char *ssid = "xxxxxxxx";
   const char *senha = "xxxxxxxxxxx";
   WiFi.begin(ssid, senha);
 
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.print("\n Conectado a rede: ");
-  Serial.println(ssid);
   lcd.setCursor(0, 2);
   lcd.print("                    ");
   lcd.setCursor(0, 3);
   lcd.print("                    ");
   lcd.setCursor(0, 2);
   lcd.print("Conectando a rede:");
+  lcd.setCursor(0, 3);
+  lcd.print(ssid);
+  Serial.print("\n Conectado a rede: ");
+  Serial.println(ssid);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
+    delay(500);
+  }
+  lcd.setCursor(0, 2);
+  lcd.print("                    ");
+  lcd.setCursor(0, 3);
+  lcd.print("                    ");
+  lcd.setCursor(0, 2);
+  lcd.print("Conectado a rede:");
   lcd.setCursor(0, 3);
   lcd.print(ssid);
   delay(1000);
@@ -113,7 +130,13 @@ void taskVeficacao(void *param)
 {
   while (1)
   {
-    leituraBiometria();
+    if (gravacao == true)
+    {
+    }
+    else
+    {
+      leituraBiometria();
+    }
   }
   vTaskDelay(100);
 }
@@ -389,6 +412,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     Serial.print("gravacao_va_teste: ");
     Serial.println(messageTemp);
     mensagemTopico3 = messageTemp;
+    gravacao = true;
   }
 }
 
